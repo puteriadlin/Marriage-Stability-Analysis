@@ -2,7 +2,7 @@
 
 Group project for CSCI 4343 Data Science, International Islamic University Malaysia (Semester II, 2024/2025).
 
-Divorce is a rising social concern in Iran, and Baitul Muslim (the Muslim family institution) depends on counsellors and policymakers to support couples. This project analyses socio-demographic and relationship factors to find which ones are most linked to marriage stability, so that support can be better targeted.
+Divorce is a rising social concern in Iran, and Baitul Muslim (the Muslim family institution) depends on counsellors and policymakers to support couples. This project analyses socio-demographic and relationship factors to find which ones are most linked to marriage stability, so that support can be better targeted. The work supports UN Sustainable Development Goal 16 (strong institutions and family stability).
 
 ## Data
 
@@ -10,22 +10,23 @@ The Marriage and Divorce dataset from Kaggle (`Marriage_Divorce_DB.csv`): 100 co
 
 ## Approach
 
-1. **Clean and prepare:** checked data types and duplicates, ran IQR outlier checks on every factor, and expanded the small sample with Gaussian-noise augmentation (100 to 300 rows).
-2. **Explore:** correlation matrix and regression plots to see how each factor relates to divorce probability.
-3. **Model and tune:** a Support Vector Machine tuned with GridSearchCV (5-fold) over C (0.1, 1, 10), gamma (scale, auto) and three kernels.
-4. **Recommend:** turned the findings into suggestions for counsellors, policymakers and Baitul Muslim institutions.
+1. **Clean and prepare:** checked data types, missing values and duplicates; ran IQR, z-score and Isolation Forest outlier checks; expanded the 100 couples to 300 rows with Gaussian-noise augmentation; Isolation Forest then removed 15 rows, leaving 285.
+2. **Select features:** kept the 10 factors most correlated with divorce probability, including education, good income, social similarities, addiction, age gap, love and spouse confirmed by family.
+3. **Explore:** correlation matrix and regression plots to see how each factor relates to divorce probability.
+4. **Model:** split divorce probability (1–3) into a lower and a higher class, split the data 80/20 (228 / 57 rows), compared SVM kernels, then tuned with GridSearchCV (5-fold, 90 fits) over C (0.1, 1, 10), gamma (scale, auto) and linear, RBF and polynomial kernels.
 
 ![Correlation matrix](images/baitul-correlation.jpg)
 
 ## Results
 
-| Kernel | Train accuracy | Test accuracy |
+| Model | Train accuracy | Test accuracy |
 |---|---|---|
-| **Linear** | **0.711** | **0.667** |
-| Polynomial | 0.706 | 0.667 |
-| RBF | 0.658 | 0.649 |
+| Linear, default settings | 0.711 | 0.667 |
+| Polynomial, default settings | 0.706 | 0.667 |
+| RBF, default settings | 0.658 | 0.649 |
+| **RBF tuned (C = 1, gamma = auto)** | – | **0.947** |
 
-The linear kernel generalised best, which suggests a linear boundary captures the relationship without the overfitting risk of more complex kernels.
+The tuned model reached precision 0.96 and recall 0.94 (macro average) on the 57 test rows.
 
 <p>
   <img src="images/baitul-education.jpg" width="48%" alt="Education vs divorce probability">
@@ -36,11 +37,18 @@ The linear kernel generalised best, which suggests a linear boundary captures th
 
 - Education had the strongest relationship with marriage stability (r = −0.34): higher education was linked to lower divorce probability.
 - Age gap on its own showed only a weak positive link, so compatibility and shared values seem to matter more.
+- Emotional and family factors such as love and family approval sat among the top predictors next to socio-economic ones, which fits the role of family involvement in marriage in Iran.
 
 ## What I would improve
 
-- Collect a larger real sample instead of relying on augmentation, and keep augmented copies out of the test set.
-- Report precision and recall alongside accuracy.
+- **The 94.7% is likely optimistic.** Augmentation ran before the train-test split, so noisy copies of the same couple can sit in both sets. Splitting first and augmenting only the training data would give a fairer score.
+- The default-kernel models were trained on unscaled features; using the standardised features for every model would make the comparison fairer.
+- Collect a larger, more recent sample, including Malaysian data where Baitul Muslim works differently.
+- Try XGBoost or neural networks, and turn the model into a simple web tool that counsellors could use for premarital guidance.
+
+## Notebook
+
+`notebooks/marriage_stability_analysis.ipynb` was rebuilt from a printed export of the original notebook. A few lines cut off at the page edge were restored and are marked `# restored`.
 
 ## Tech stack
 
